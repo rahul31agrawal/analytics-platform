@@ -1,0 +1,28 @@
+{% extends "appbuilder/general/model/show_cascade.html" %}
+{% import 'appbuilder/general/lib.html' as lib %}
+
+{% block content %}
+{{ lib.panel_begin(title) }}
+
+{% block show_form %}
+    {{ super() }}
+{% endblock show_form %}
+
+{% block related_views %}
+    {% if related_views is defined %}
+        {% for view in related_views %}
+            {% call lib.accordion_tag(view.__class__.__name__,view.title, True) %}
+                {{ widgets.get('related_views')[loop.index - 1](pk = pk)|safe }}
+            {% endcall %}
+        {% endfor %}
+    {% endif %}
+{% endblock related_views %}
+
+
+{{ lib.panel_end() }}
+
+{% endblock %}
+
+{% block add_tail_js %}
+    {{ super() }}
+{% endblock %}

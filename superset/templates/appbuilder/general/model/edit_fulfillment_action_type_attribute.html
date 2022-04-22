@@ -1,0 +1,89 @@
+{% extends "appbuilder/base.html" %}
+{% import 'appbuilder/general/lib.html' as lib %}
+
+{% block content %}
+{{ lib.panel_begin(title) }}
+
+{% if related_views is defined %}
+    <ul class="nav nav-tabs">
+    <li class="active"><a href="#Home" data-toggle="tab">{{ _("Detail") }}</a> </li>
+        {% for view in related_views %}
+        <li><a href="#{{view.__class__.__name__}}" data-toggle="tab">{{view.title}}</a></li>
+        {% endfor %}
+        </ul>
+
+        <div class="tab-content">
+        {% for view in related_views %}
+        <div id="{{view.__class__.__name__}}" class="tab-pane">
+        {{ widgets.get('related_views')[loop.index - 1]()|safe }}
+    </div>
+    {% endfor %}
+{% endif %}
+
+{% block edit_form %}
+    <div id="Home" class="tab-pane active">
+        {{ widgets.get('edit')(form_action=form_action)|safe }}
+    </div>
+
+    <script>
+        let controls_map = {
+            "Number": {"nf_min_value":0, "nf_max_value":0,"nf_num_decimals":0,"nf_step": 0},
+            "String": {"sf_min_length":0, "sf_max_length":0, "sf_validation_regex":"None","sf_validation_error_msg":"None"},
+            "Date": {"df_date_format":"None"},
+            "Choice": {"cf_choice_options":"None"}
+        };
+        function clean_fields() {
+            let selected = $("#field_type").val();
+            for (var key in controls_map) {
+                let controls = controls_map[key];
+                for (var control_id in controls){
+                    if (key != selected) {
+                        $("#" + control_id).val("");;
+                    }
+                }
+            }
+        }
+        function show_fields() {
+            let selected = $("#field_type").val();
+            for (var key in controls_map) {
+                let controls = controls_map[key];
+                for (var control_id in controls){
+                    if (key == selected) {
+                        $("#" + control_id).parent().parent().show();
+                    } else {
+                        $("#" + control_id).parent().parent().hide();
+                    }
+                }
+            }
+        }
+        function set_defaults() {
+            let selected = $("#field_type").val();
+            for (var key in controls_map) {
+                let controls = controls_map[key];
+                for (var control_id in controls){
+                    if (key != selected) {
+                        $("#" + control_id).val(controls[control_id]);;
+                    }
+                }
+            }
+        }
+        $(document).ready(function() {
+            clean_fields();
+            show_fields();
+            $("#model_form").submit(function() {
+                set_defaults();
+                return true;
+            });
+            $("#field_type").on("change", show_fields);
+        });
+    </script>
+{% endblock %}
+
+    {% if related_views is defined %} </div> {% endif %}
+
+{{ lib.panel_end() }}
+{% endblock %}
+
+{% block add_tail_js %}
+<script src="{{url_for('appbuilder.static',filename='js/ab_keep_tab.js')}}"></script>
+{% endblock %}

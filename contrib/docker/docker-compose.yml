@@ -1,0 +1,70 @@
+#
+# Licensed to the Apache Software Foundation (ASF) under one or more
+# contributor license agreements.  See the NOTICE file distributed with
+# this work for additional information regarding copyright ownership.
+# The ASF licenses this file to You under the Apache License, Version 2.0
+# (the "License"); you may not use this file except in compliance with
+# the License.  You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+version: '2'
+services:
+  redis:
+    image: redis:3.2
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:6379:6379"
+    volumes:
+      - redis:/data
+
+  postgres:
+    image: postgres:10
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: superset
+      POSTGRES_PASSWORD: superset
+      POSTGRES_USER: superset
+    ports:
+      - "127.0.0.1:5432:5432"
+    volumes:
+      - postgres:/var/lib/postgresql/data
+
+  superset:
+    build:
+      context: ../../
+      dockerfile: contrib/docker/Dockerfile
+    restart: unless-stopped
+    environment:
+      FLASK_ENV: production
+      FLASK_APP: "/var/docker_superset/superset:app"
+      SUPERSET_DB_URI: "postgresql://postgres:L13urP1s4n@10.23.52.88:5432/IOU_SIT_UI"
+      IOU_DB_URI: "postgresql://postgres:L13urP1s4n@10.23.52.88:5432/IOU_SIT"
+      ABINITIO_GATEWAY_CONFIG: '{"host": "10.24.164.42","port":"8080","api_user": "admin","api_password": "admin", "root_path": "/ag_cmsqa/","role_mapping": {"1": "Admin", "2": "IOU_Custom", "3": "IOU_VIEW_ROLE"}}'
+      # If using production, comment development volume below
+      #SUPERSET_ENV: production
+      SUPERSET_ENV: production
+      SUPERSET_HOME: '/var/docker_superset/'
+    user: root:root
+    ports:
+      - 8088:8088
+    depends_on:
+      - postgres
+      - redis
+    volumes:
+      # this is needed to communicate with the postgres and redis services
+      - ./superset_config.py:/home/superset/superset/superset_config.py
+      # this is needed for development, remove with SUPERSET_ENV=production
+      - ../../superset:/home/superset/superset
+
+volumes:
+  postgres:
+    external: false
+  redis:
+    external: false

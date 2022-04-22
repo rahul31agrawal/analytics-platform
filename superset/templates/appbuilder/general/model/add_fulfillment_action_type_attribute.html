@@ -1,0 +1,54 @@
+{% extends "appbuilder/base.html" %}
+{% import 'appbuilder/general/lib.html' as lib %}
+
+{% block content %}
+{{ lib.panel_begin(title) }}
+
+{% block add_form %}
+    {{ widgets.get('add')(form_action=form_action)|safe }}
+    <script>
+        let controls_map = {
+            "Number": {"nf_min_value":0, "nf_max_value":0,"nf_num_decimals":0,"nf_step": 0},
+            "String": {"sf_min_length":0, "sf_max_length":0, "sf_validation_regex":"None","sf_validation_error_msg":"None"},
+            "Date": {"df_date_format":"None"},
+            "Choice": {"cf_choice_options":"None"}
+        };
+        function show_fields() {
+            let selected = $("#field_type").val();
+            for (var key in controls_map) {
+                let controls = controls_map[key];
+                for (var control_id in controls){
+                    if (key == selected) {
+                        $("#" + control_id).parent().parent().show();
+                    } else {
+                        $("#" + control_id).parent().parent().hide();
+                    }
+                }
+            }
+        }
+        function set_defaults() {
+            let selected = $("#field_type").val();
+            for (var key in controls_map) {
+                let controls = controls_map[key];
+                for (var control_id in controls){
+                    if (key != selected) {
+                        $("#" + control_id).val(controls[control_id]);;
+                    }
+                }
+            }
+        }
+        $(document).ready(function() {
+            show_fields();
+            $("#model_form").submit(function() {
+                set_defaults();
+                return true;
+            });
+            $("#field_type").on("change", show_fields);
+        });
+    </script>
+
+{% endblock %}
+
+
+{{ lib.panel_end() }}
+{% endblock %}
