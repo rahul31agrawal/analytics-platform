@@ -169,9 +169,11 @@ for middleware in app.config.get("ADDITIONAL_MIDDLEWARE"):
 class MyIndexView(IndexView):
     @expose("/")
     def index(self):
-        # return redirect("/superset/welcome")
-        return redirect("/subscriberview/list/")
-
+        security_manager = appbuilder.sm
+        if(security_manager.can_access("can_list", "SubscriberView")):
+            return redirect("/subscriberview/list/")
+        else:
+            return redirect("/superset/dashboard/2/")
 
 custom_sm = app.config.get("CUSTOM_SECURITY_MANAGER") or SupersetSecurityManager
 if not issubclass(custom_sm, SupersetSecurityManager):

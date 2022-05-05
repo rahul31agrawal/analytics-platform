@@ -44,9 +44,9 @@ services:
     environment:
       FLASK_ENV: production
       FLASK_APP: "/var/docker_superset/superset:app"
-      SUPERSET_DB_URI: "postgresql://postgres:L13urP1s4n@10.23.52.88:5432/IOU_SIT_UI"
+      SUPERSET_DB_URI: "postgresql://postgres:L13urP1s4n@10.23.52.88:5432/iou_ui_sit_new"
       IOU_DB_URI: "postgresql://postgres:L13urP1s4n@10.23.52.88:5432/IOU_SIT"
-      ABINITIO_GATEWAY_CONFIG: '{"host": "10.24.164.42","port":"8080","api_user": "admin","api_password": "admin", "root_path": "/ag_cmsqa/","role_mapping": {"1": "Admin", "2": "IOU_Custom", "3": "IOU_VIEW_ROLE"}}'
+      ABINITIO_GATEWAY_CONFIG: '{"host": "10.24.164.42","port":"8080","api_user": "admin","api_password": "admin", "root_path": "/ag_cmsqa/","role_mapping": {"1": "Admin", "2": "IOU_Custom", "3": "IOU_VIEW_ROLE", "4": "IOU_CustomerCare"}}'
       # If using production, comment development volume below
       #SUPERSET_ENV: production
       SUPERSET_ENV: production

@@ -3267,7 +3267,7 @@ appbuilder.add_view(FulfillmentActionView, "Fulfillment Actions", category="Fulf
 appbuilder.add_view(FulfillmentActionTypeView, "Fulfillment Action Types", category="Fulfillment", category_label=__("Fulfillment"), category_icon="fa-handshake-o",)
 appbuilder.add_view_no_menu(FulfillmentActionTypeAttributeView)#, "Fulfillment Action Type Attributes", category="Fulfillment", category_label=__("Fulfillment"), category_icon="fa-handshake-o",)
 appbuilder.add_view_no_menu(FulfillmentActionValueView)#, "Fulfillment Action Values", category="Fulfillment", category_label=__("Fulfillment"), category_icon="fa-handshake-o",)
-appbuilder.add_view(LoanView, "Loans", category="Loans", category_label=__("Loans"), category_icon="fa-money",)
+appbuilder.add_view(LoanView, "Loan", category="Loans", category_label=__("Loans"), category_icon="fa-money",)
 appbuilder.add_view(LoanChannelView, "Loan Channels", category="Loans", category_label=__("Loans"), category_icon="fa-money",)
 appbuilder.add_view(LoanTransactionView, "Loan Transactions", category="Loans", category_label=__("Loans"), category_icon="fa-money",)
 appbuilder.add_view_no_menu(LoanTransactionTypeView)#, "Loan Transaction Types", category="Loans", category_label=__("Loans"), category_icon="fa-money",)
