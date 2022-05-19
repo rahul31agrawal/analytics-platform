@@ -1,4 +1,5 @@
-from flask import g, redirect, flash
+from cgi import print_arguments
+from flask import g, redirect, flash, session
 from flask_appbuilder._compat import as_unicode
 from flask_appbuilder.api import expose
 from flask_appbuilder.security.forms import LoginForm_db
@@ -25,6 +26,7 @@ class AbinitioAuthView(AuthDBView):
     def login(self):
         if g.user is not None and g.user.is_authenticated:
             return redirect(self.appbuilder.get_url_for_index)
+
         form = LoginForm_db()
         if form.validate_on_submit():
             username = form.username.data
@@ -34,10 +36,11 @@ class AbinitioAuthView(AuthDBView):
                 logging.error("Failed at auth gateway", e)
                 flash(as_unicode(self.LOGIN_FAILED_AT_GATEWAY), "warning")
                 return redirect(self.appbuilder.get_url_for_login)
+
             user = None
             if roles and len(roles) > 0:
                 user = self.appbuilder.sm.find_user(username=username)
-
+                
                 # User does not exist, create one if auto user registration.
                 if user is None:
                     user = self.appbuilder.sm.add_user(
@@ -47,12 +50,32 @@ class AbinitioAuthView(AuthDBView):
                         email=username + '@email.notfound',
                         role=self.appbuilder.sm.find_role(roles[0]),
                     )
+                else:
+
+                    #User exist but is inactive, then activate it
+                    if not user.is_active:
+                        user.active = True
+                        self.appbuilder.sm.update_user(user)
+
+                    # User exist but the role is updated in AG - Update the role on superset
+                    if (str(user.roles[0]) != roles[0]):
+                        user.roles = [self.appbuilder.sm.find_role(roles[0])]
+                        self.appbuilder.sm.update_user(user)
 
             if not user:
+
+                #User not in AG but is presernt in IOU - deactivate user
+                user = self.appbuilder.sm.find_user(username=username)
+                if user and user.is_active:
+                    user.active = False
+                    self.appbuilder.sm.update_user(user)
+                
                 flash(as_unicode(self.invalid_login_message), "warning")
                 return redirect(self.appbuilder.get_url_for_login)
+
             login_user(user, remember=False)
             return redirect(self.appbuilder.get_url_for_index)
+
         return self.render_template(
             self.login_template, title=self.title, form=form, appbuilder=self.appbuilder
         )
