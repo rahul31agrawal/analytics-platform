@@ -399,16 +399,16 @@ class Subscriber(db.Model, AuditableMixin):
     def company_brand_ro(self, val):
         pass
 
+#To ADD dropdow for opted_out / blacklisted
 class DropdownBoolean(db.Model, AuditableMixin):
     __bind_key__ = 'iou'
     __tablename__ = 'iou_drpdwn_flds'
 
     id = db.Column(db.Integer,primary_key=True)
-    opted_out = db.Column(db.Integer, nullable=False)
     value = db.Column(db.String(255), nullable=False)
     
     def __repr__(self):
-        return str(self.opted_out)
+        return str(self.value)
 
 class IOUBlacklist(db.Model, AuditableMixin):
     __bind_key__ = 'iou'
@@ -417,10 +417,10 @@ class IOUBlacklist(db.Model, AuditableMixin):
 
     subscriber_id = db.Column(db.Integer,primary_key=True)
     last_updated_dt = db.Column(db.DateTime, nullable=False, server_default=db.func.sysdate())
-    opted_out = db.Column(db.Integer,db.ForeignKey('iou_drpdwn_flds.opted_out'), nullable=False)
+    opted_out = db.Column(db.Integer,db.ForeignKey('iou_drpdwn_flds.id'), nullable=False)
     note = db.Column(db.String(255), nullable=False)
 
-    optd_out = db.relationship("DropdownBoolean",
+    blacklisted = db.relationship("DropdownBoolean",
                   #  primaryjoin="and_(DropdownBoolean.id == IOUBlacklist.opted_out)",
                     foreign_keys=[opted_out])
 

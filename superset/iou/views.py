@@ -622,10 +622,10 @@ class SubscriberView(IouModelView):
 class IOUBlacklistView(IouModelView):
     datamodel = SQLAInterface(IOUBlacklist)
 
-    list_columns = show_columns = ['subscriber_id','optd_out','note','last_updated_dt']
+    list_columns = show_columns = ['subscriber_id','blacklisted','note','last_updated_dt']
 
-    add_columns = ['subscriber_id','optd_out','note']
-    edit_columns = ['subscriber_id','optd_out','note']
+    add_columns = ['subscriber_id','blacklisted','note']
+    edit_columns = ['subscriber_id','blacklisted','note']
 
     edit_form_extra_fields = {
         'subscriber_id': StringField('Subscriber Id', widget=BS3TextFieldROWidget())
