@@ -51,7 +51,6 @@ class AbinitioAuthView(AuthDBView):
                         role=self.appbuilder.sm.find_role(roles[0]),
                     )
                 else:
-
                     #User exist but is inactive, then activate it
                     if not user.is_active:
                         user.active = True
@@ -63,7 +62,6 @@ class AbinitioAuthView(AuthDBView):
                         self.appbuilder.sm.update_user(user)
 
             if not user:
-
                 #User not in AG but is presernt in IOU - deactivate user
                 user = self.appbuilder.sm.find_user(username=username)
                 if user and user.is_active:
