@@ -1,10 +1,13 @@
 from cgi import print_arguments
+from pickle import TRUE
+from unittest import result
 from flask import g, redirect, flash, session
 from flask_appbuilder._compat import as_unicode
 from flask_appbuilder.api import expose
 from flask_appbuilder.security.forms import LoginForm_db
 from flask_appbuilder.security.views import AuthDBView
 from flask_login import login_user
+import sqlalchemy
 
 from superset import config
 from superset.security import SupersetSecurityManager
@@ -50,6 +53,7 @@ class AbinitioAuthView(AuthDBView):
                         email=username + '@email.notfound',
                         role=self.appbuilder.sm.find_role(roles[0]),
                     )
+                    SliceUserView(username).insert_user_in_slice_n_dashboard()
                 else:
                     #User exist but is inactive, then activate it
                     if not user.is_active:
@@ -61,6 +65,11 @@ class AbinitioAuthView(AuthDBView):
                         user.roles = [self.appbuilder.sm.find_role(roles[0])]
                         self.appbuilder.sm.update_user(user)
 
+                        if(str(user.roles[0]) == 'IOU_Admin'):
+                            SliceUserView(username).delete_user_in_slice_n_dashboard()
+                        elif(roles[0] == 'IOU_Admin'):
+                            SliceUserView(username).insert_user_in_slice_n_dashboard()
+                    
             if not user:
                 #User not in AG but is presernt in IOU - deactivate user
                 user = self.appbuilder.sm.find_user(username=username)
@@ -71,6 +80,7 @@ class AbinitioAuthView(AuthDBView):
                 flash(as_unicode(self.invalid_login_message), "warning")
                 return redirect(self.appbuilder.get_url_for_login)
 
+            
             login_user(user, remember=False)
             return redirect(self.appbuilder.get_url_for_index)
 
@@ -171,3 +181,61 @@ class AbinitioSecurityManager(SupersetSecurityManager):
         super(AbinitioSecurityManager, self).__init__(appbuilder)
         self.gateway_config = config.ABINITIO_GATEWAY_CONFIG
         self.abinitio_gateway = AbinitioAuthGateway(self.gateway_config)
+
+
+class SliceUserView:
+
+    def __init__(self,username):
+        self.engine = sqlalchemy.create_engine(config.SQLALCHEMY_DATABASE_URI)
+        self.conn = self.engine.connect()
+        self.metadata = sqlalchemy.MetaData()
+
+        #set tables used
+        ab_user = sqlalchemy.Table('ab_user', self.metadata, autoload=TRUE, autoload_with=self.engine)
+        self.slice_user = sqlalchemy.Table('slice_user', self.metadata, autoload = TRUE, autoload_with = self.engine)
+        self.dashboard_user = sqlalchemy.Table('dashboard_user', self.metadata, autoload = TRUE, autoload_with = self.engine)
+
+        #Get USER ID
+        query = sqlalchemy.select([ab_user.columns.id]).where(ab_user.columns.username == username)
+        result = self.conn.execute(query)
+        self.user_id = [i[0] for i in result.fetchall()].pop()
+        
+    def insert_user_in_slice_n_dashboard(self): 
+
+        #Get All Slice IDS
+        query1 = sqlalchemy.select([self.slice_user.columns.slice_id.distinct()])
+        result1 = self.conn.execute(query1)
+        slice_id_list = [i[0] for i in result1.fetchall()]
+        slice_id_cnt = len(slice_id_list)
+
+        #Get All Dashboard ID
+        query2 = sqlalchemy.select([self.dashboard_user.columns.dashboard_id.distinct()])
+        result2 = self.conn.execute(query2)
+        dash_id_list = [i[0] for i in result2.fetchall()]
+        dash_id_cnt = len(dash_id_list)
+
+        #Insert in Slice User
+        inst_slice_lst = []
+        for j in range(slice_id_cnt):
+            inst_slice_lst.append({"user_id":self.user_id,"slice_id":slice_id_list[j]})
+
+        query3 = sqlalchemy.insert(self.slice_user).values(inst_slice_lst)
+        result3 = self.conn.execute(query3)
+        
+        #Inset in Dashboard User
+        inst_dash_lst = []
+        for k in range(dash_id_cnt):
+            inst_dash_lst.append({"user_id":self.user_id,"dashboard_id":dash_id_list[k]})
+
+        query4 = sqlalchemy.insert(self.dashboard_user).values(inst_dash_lst)
+        result4 = self.conn.execute(query4)
+    
+    def delete_user_in_slice_n_dashboard(self): 
+        
+        #delete from slice user
+        query5 = sqlalchemy.delete(self.slice_user).where(self.slice_user.columns.user_id == self.user_id)
+        result5 = self.conn.execute(query5)
+
+        #delete from dashboard user
+        query6 = sqlalchemy.delete(self.dashboard_user).where(self.dashboard_user.columns.user_id == self.user_id)
+        result6 = self.conn.execute(query6)
